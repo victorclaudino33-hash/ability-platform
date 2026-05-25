@@ -1,0 +1,58 @@
+services:
+  frontend:
+    build: ./frontend
+    container_name: ability_frontend
+    ports:
+      - ""5173:5173""
+    depends_on:
+      - backend
+    networks:
+      - ability_net
+
+  backend:
+    build: ./backend
+    container_name: ability_backend
+    ports:
+      - ""8080:8080""
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ability_system
+      - SPRING_DATASOURCE_USERNAME=ability
+      - SPRING_DATASOURCE_PASSWORD=2729
+    networks:
+      - ability_net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ability_db
+    ports:
+      - ""5432:5432""
+    environment:
+      POSTGRES_USER: ability
+      POSTGRES_PASSWORD: 2729
+      POSTGRES_DB: ability_system
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ability_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: ability_gateway
+    ports:
+      - ""80:80""
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ability_net
+
+volumes:
+  postgres_data:
+
+networks:
+  ability_net:
+    driver: bridge
